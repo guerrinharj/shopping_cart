@@ -1,5 +1,6 @@
 class CartsController < ApplicationController
   before_action :set_cart, only: %i[show destroy add_product remove_product]
+  before_action :refresh_last_interaction, only: %i[add_product remove_product]
 
   def show
     render json: @cart
@@ -107,5 +108,9 @@ class CartsController < ApplicationController
 
   def update_cart_total_price
     @cart.total_price = @cart.products.sum { |p| p['total_price'].to_f }
+  end
+
+  def refresh_last_interaction
+    @cart.update!(last_interaction_at: Time.current)
   end
 end
