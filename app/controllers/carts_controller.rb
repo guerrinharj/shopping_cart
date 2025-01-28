@@ -1,22 +1,19 @@
 class CartsController < ApplicationController
   before_action :set_cart, only: %i[show update destroy add_product remove_product]
 
-  # GET /carts
   def index
     @carts = Cart.all
 
     render json: @carts
   end
 
-  # GET /carts/1
   def show
     render json: @cart
   end
 
-  # POST /carts
   def create
     @cart = Cart.new(cart_params)
-    @cart.products ||= [] # Ensure products is initialized as an empty array
+    @cart.products ||= []
     @cart.total_price ||= 0
 
     if @cart.save
@@ -26,7 +23,6 @@ class CartsController < ApplicationController
     end
   end
 
-  # PUT /carts/1
   def update
     if @cart.update(cart_params)
       render json: @cart
@@ -35,12 +31,10 @@ class CartsController < ApplicationController
     end
   end
 
-  # DELETE /carts/1
   def destroy
     @cart.destroy!
   end
 
-  # POST /carts/1/add_product
   def add_product
     product_id = params[:product_id]
     quantity = params[:quantity].to_i
@@ -70,7 +64,6 @@ class CartsController < ApplicationController
     end
   end
 
-  # DELETE /carts/1/remove_product
   def remove_product
     product_id = params[:product_id]
     product = @cart.products.find { |p| p["id"] == product_id }
@@ -89,6 +82,8 @@ class CartsController < ApplicationController
 
   def set_cart
     @cart = Cart.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+    render json: { errors: ['Cart not found'] }, status: :not_found
   end
 
   def find_product(product_id)
@@ -100,6 +95,6 @@ class CartsController < ApplicationController
   end
 
   def cart_params
-    params.require(:cart).permit(:total_price, products: [])
-  end
+    params.permit(:product_id, :quantity, :total_price, products: [])
+  end  
 end
