@@ -355,43 +355,31 @@ curl --location --request DELETE 'http://localhost:3000/products/129' \
 - This application use a series of shell scripts in order to simplify docker and rails commands, they're all written inside the devops folder.
 
 
-### Build the container and start the DB
+### Build, up the container and start Sidekiq
 
 
 ```bash
   sh devops/chmod.sh
   ./devops/compose/build.sh --no-cache
   ./devops/compose/up.sh
-  ./devops/rails/restart.sh
-  ./devops/rails/spec.sh
-  ./devops/compose/down.sh
 ```
 
-### Run Rails server
+### Start the DB
 
 ```bash
-    ./devops/compose/up.sh
-    ./devops/rails/server.sh
-    # CTRL + C
-    ./devops/compose/down.sh
+    ./devops/rails/restart.sh
 ```
 
 ### Run Rails console
 
 ```bash
-    ./devops/compose/up.sh
     ./devops/rails/console.sh
-    # CTRL + C
-    ./devops/compose/down.sh
 ```
 
 ### Update DB and Rails
 
 ```bash
-    ./devops/compose/up.sh
     ./devops/rails/update.sh
-    # CTRL + C
-    ./devops/compose/down.sh
 ```
 
 ### Uninstall
