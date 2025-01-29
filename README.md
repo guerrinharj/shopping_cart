@@ -1,4 +1,4 @@
-```md
+
 # CONTACT LIST API
 
 This is an API I built as a challenge for RD Station. It is a shopping cart management system.
@@ -188,5 +188,4 @@ sh devops/chmod.sh
 - If DB access issues persist, rebuild the container.
 
 ## That's it! Happy coding! :computer:
-```
 
