@@ -101,7 +101,7 @@ curl --location 'http://localhost:3000/cart/add_item' \
     }'
 ```
 
-**Response:** *(Updated cart JSON response)*
+**Response:**
 
 ### ```DELETE /cart/:product_id```
 
@@ -112,7 +112,7 @@ Remove a product from the cart.
 curl --location --request DELETE 'http://localhost:3000/cart/1'
 ```
 
-**Response:** *(Updated cart JSON response)*
+**Response:**
 
 ### ```GET /products```
 
