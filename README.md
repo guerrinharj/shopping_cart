@@ -1,218 +1,192 @@
-# Desafio técnico e-commerce
+```md
+# CONTACT LIST API
 
-## Nossas expectativas
+This is an API I built as a challenge for RD Station. It is a shopping cart management system.
 
-A equipe de engenharia da RD Station tem alguns princípios nos quais baseamos nosso trabalho diário. Um deles é: projete seu código para ser mais fácil de entender, não mais fácil de escrever.
+## Models
 
-Portanto, para nós, é mais importante um código de fácil leitura do que um que utilize recursos complexos e/ou desnecessários.
+This API works with three models: ```Cart```, ```Product```, and ```CartItem```.  
+```CartItem``` acts as an **association model** between ```Cart``` and ```Product```.  
+Users can add products to the cart, creating a cart item. However, **products are not directly associated with a cart**—they are seeded into the database independently.
 
-O que gostaríamos de ver:
+### Cart
 
-- O código deve ser fácil de ler. Clean Code pode te ajudar.
-- Notas gerais e informações sobre a versão da linguagem e outras informações importantes para executar seu código.
-- Código que se preocupa com a performance (complexidade de algoritmo).
-- O seu código deve cobrir todos os casos de uso presentes no README, mesmo que não haja um teste implementado para tal.
-- A adição de novos testes é sempre bem-vinda.
-- Você deve enviar para nós o link do repositório público com a aplicação desenvolvida (GitHub, BitBucket, etc.).
+- ```Cart``` has an ```id```, a ```total_price```, an ```abandoned_at``` timestamp, and a ```last_interaction_at``` timestamp.
+- ```Cart``` is associated with ```CartItem```, which links it to multiple ```Product``` records.
+- ```total_price``` must be a number equal to or greater than ```0```.
+- ```Cart``` is considered **abandoned** if ```abandoned_at``` is not ```nil```.
+- ```Cart``` is considered **not abandoned** if ```abandoned_at``` is ```nil```.
+- ```Cart``` is **ready for abandonment** if it has not been abandoned and ```last_interaction_at``` was more than ```3 hours ago```.
+- ```Cart``` is **ready for deletion** if it has been abandoned for more than ```7 days```.
+- ```total_price``` is updated by summing the ```total_price``` of all its ```cart_items```.
+- Before saving, ```last_interaction_at``` is set to the current timestamp if it is ```nil```.
+- If a ```Cart``` has been abandoned for more than ```7 days```, it will be automatically removed.
 
-## O Desafio - Carrinho de compras
-O desafio consiste em uma API para gerenciamento do um carrinho de compras de e-commerce.
+### Product
 
-Você deve desenvolver utilizando a linguagem Ruby e framework Rails, uma API Rest que terá 3 endpoins que deverão implementar as seguintes funcionalidades:
+- ```Product``` has an ```id```, a ```name```, and a ```price```.
+- ```name``` must be present.
+- ```price``` must be a number equal to or greater than ```0```.
 
-### 1. Registrar um produto no carrinho
-Criar um endpoint para inserção de produtos no carrinho.
+### CartItem
 
-Se não existir um carrinho para a sessão, criar o carrinho e salvar o ID do carrinho na sessão.
+- ```CartItem``` has an ```id```, a ```cart_id```, a ```product_id```, a ```quantity```, and a ```total_price```.
+- ```CartItem``` belongs to a ```Cart``` and a ```Product```.
+- ```quantity``` must be a number greater than ```0```.
+- ```total_price``` must be a number equal to or greater than ```0```.
+- ```total_price``` is automatically calculated as ```product.price * quantity``` before saving.
 
-Adicionar o produto no carrinho e devolver o payload com a lista de produtos do carrinho atual.
+## Routes
 
+### ```GET /cart```
 
-ROTA: `/cart`
-Payload:
-```js
-{
-  "product_id": 345, // id do produto sendo adicionado
-  "quantity": 2, // quantidade de produto a ser adicionado
-}
+Retrieve the cart information with products and total price.
+
+**Request:**
+```bash
+curl --location 'http://localhost:3000/cart'
 ```
 
-Response
-```js
-{
-  "id": 789, // id do carrinho
-  "products": [
-    {
-      "id": 645,
-      "name": "Nome do produto",
-      "quantity": 2,
-      "unit_price": 1.99, // valor unitário do produto
-      "total_price": 3.98, // valor total do produto
-    },
-    {
-      "id": 646,
-      "name": "Nome do produto 2",
-      "quantity": 2,
-      "unit_price": 1.99,
-      "total_price": 3.98,
-    },
-  ],
-  "total_price": 7.96 // valor total no carrinho
-}
-```
-
-### 2. Listar itens do carrinho atual
-Criar um endpoint para listar os produtos no carrinho atual.
-
-ROTA: `/cart`
-
-Response:
-```js
-{
-  "id": 789, // id do carrinho
-  "products": [
-    {
-      "id": 645,
-      "name": "Nome do produto",
-      "quantity": 2,
-      "unit_price": 1.99, // valor unitário do produto
-      "total_price": 3.98, // valor total do produto
-    },
-    {
-      "id": 646,
-      "name": "Nome do produto 2",
-      "quantity": 2,
-      "unit_price": 1.99,
-      "total_price": 3.98,
-    },
-  ],
-  "total_price": 7.96 // valor total no carrinho
-}
-```
-
-### 3. Alterar a quantidade de produtos no carrinho 
-Um carrinho pode ter _N_ produtos, se o produto já existir no carrinho, apenas a quantidade dele deve ser alterada
-
-ROTA: `/cart/add_item`
-
-Payload
+**Response:**
 ```json
 {
-  "product_id": 1230,
-  "quantity": 1
-}
-```
-Response:
-```json
-{
-  "id": 1,
+  "id": 12,
   "products": [
-    {
-      "id": 1230,
-      "name": "Nome do produto X",
-      "quantity": 2, // considerando que esse produto já estava no carrinho
-      "unit_price": 7.00, 
-      "total_price": 14.00, 
-    },
-    {
-      "id": 01020,
-      "name": "Nome do produto Y",
-      "quantity": 1,
-      "unit_price": 9.90, 
-      "total_price": 9.90, 
-    },
+      {
+          "id": 3,
+          "name": "Xiaomi Mi 27 Pro Plus Master Ultra",
+          "quantity": 5,
+          "unit_price": 999.99,
+          "total_price": 4999.95
+      }
   ],
-  "total_price": 23.9
+  "total_price": 4999.95
 }
 ```
 
-### 3. Remover um produto do carrinho 
+### ```POST /cart```
 
-Criar um endpoint para excluir um produto do do carrinho. 
+Create a cart and add products to it.
 
-ROTA: `/cart/:product_id`
-
-
-#### Detalhes adicionais:
-
-- Verifique se o produto existe no carrinho antes de tentar removê-lo.
-- Se o produto não estiver no carrinho, retorne uma mensagem de erro apropriada.
-- Após remover o produto, retorne o payload com a lista atualizada de produtos no carrinho.
-- Certifique-se de que o endpoint lida corretamente com casos em que o carrinho está vazio após a remoção do produto.
-
-### 5. Excluir carrinhos abandonados
-Um carrinho é considerado abandonado quando estiver sem interação (adição ou remoção de produtos) há mais de 3 horas.
-
-- Quando este cenário ocorrer, o carrinho deve ser marcado como abandonado.
-- Se o carrinho estiver abandonado há mais de 7 dias, remover o carrinho.
-- Utilize um Job para gerenciar (marcar como abandonado e remover) carrinhos sem interação.
-- Configure a aplicação para executar este Job nos períodos especificados acima.
-
-### Detalhes adicionais:
-- O Job deve ser executado regularmente para verificar e marcar carrinhos como abandonados após 3 horas de inatividade.
-- O Job também deve verificar periodicamente e excluir carrinhos que foram marcados como abandonados por mais de 7 dias.
-
-### Como resolver
-
-#### Implementação
-Você deve usar como base o código disponível nesse repositório e expandi-lo para que atenda as funcionalidade descritas acima.
-
-Há trechos parcialmente implementados e também sugestões de locais para algumas das funcionalidades sinalizados com um `# TODO`. Você pode segui-los ou fazer da maneira que julgar ser a melhor a ser feita, desde que atenda os contratos de API e funcionalidades descritas.
-
-#### Testes
-Existem testes pendentes, eles estão marcados como <span style="color:green;">Pending</span>, e devem ser implementados para garantir a cobertura dos trechos de código implementados por você.
-Alguns testes já estão passando e outros estão com erro. Com a sua implementação os testes com erro devem passar a funcionar. 
-A adição de novos testes é sempre bem-vinda, mas sem alterar os já implementados.
-
-
-### O que esperamos
-- Implementação dos testes faltantes e de novos testes para os métodos/serviços/entidades criados
-- Construção das 4 rotas solicitadas
-- Implementação de um job para controle dos carrinhos abandonados
-
-
-### Itens adicionais / Legais de ter
-- Utilização de factory na construção dos testes
-- Desenvolvimento do docker-compose / dockerização da app
-
-A aplicação já possui um Dockerfile, que define como a aplicação deve ser configurada dentro de um contêiner Docker. No entanto, para completar a dockerização da aplicação, é necessário criar um arquivo `docker-compose.yml`. O arquivo irá definir como os vários serviços da aplicação (por exemplo, aplicação web, banco de dados, etc.) interagem e se comunicam.
-
-- Adicione tratamento de erros para situações excepcionais válidas, por exemplo: garantir que um produto não possa ter quantidade negativa. 
-
-- Se desejar você pode adicionar a configuração faltante no arquivo `docker-compose.yml` e garantir que a aplicação rode de forma correta utilizando Docker. 
-
-## Informações técnicas
-
-### Dependências
-- ruby 3.3.1
-- rails 7.1.3.2
-- postgres 16
-- redis 7.0.15
-
-### Como executar o projeto
-
-## Executando a app sem o docker
-Dado que todas as as ferramentas estão instaladas e configuradas:
-
-Instalar as dependências do:
+**Request:**
 ```bash
-bundle install
+curl --location 'http://localhost:3000/cart'
 ```
 
-Executar o sidekiq:
+**Response:** *(Same as GET /cart response)*
+
+### ```DELETE /cart```
+
+Delete a cart.
+
+**Request:**
 ```bash
-bundle exec sidekiq
+curl --location --request DELETE 'http://localhost:3000/cart'
 ```
 
-Executar projeto:
+**Response:**
+```204 No Content```
+
+### ```POST /cart/add_item```
+
+Add a product to an existing cart. If the product already exists, the quantity is updated.
+
+**Request:**
 ```bash
-bundle exec rails server
+curl --location 'http://localhost:3000/cart/add_item' \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "product_id": 3,
+      "quantity": 4
+    }'
 ```
 
-Executar os testes:
+**Response:** *(Updated cart JSON response)*
+
+### ```DELETE /cart/:product_id```
+
+Remove a product from the cart.
+
+**Request:**
 ```bash
-bundle exec rspec
+curl --location --request DELETE 'http://localhost:3000/cart/1'
 ```
 
-### Como enviar seu projeto
-Salve seu código em um versionador de código (GitHub, GitLab, Bitbucket) e nos envie o link publico. Se achar necessário, informe no README as instruções para execução ou qualquer outra informação relevante para correção/entendimento da sua solução.
+**Response:** *(Updated cart JSON response)*
+
+### ```GET /products```
+
+Get all products from the database.
+
+**Request:**
+```bash
+curl --location 'http://localhost:3000/products'
+```
+
+**Response:** *(Array of product objects)*
+
+### ```GET /products/:product_id```
+
+Get a single product from the database.
+
+### ```POST /products```
+
+Create a product.
+
+### ```PUT /products/:product_id```
+
+Edit a product.
+
+### ```DELETE /products/:product_id```
+
+Delete a product.
+
+## Abandonment System
+
+- This API includes an **abandoned cart system** that automatically processes inactive carts.
+- If a ```Cart``` has **no interactions for 3 hours**, it is labeled as **abandoned**.
+- If a ```Cart``` remains **abandoned for 7 days**, it is permanently **deleted** from the database.
+
+### **Background Job: `MarkCartAsAbandonedJob`**
+- This API uses ```Sidekiq``` to schedule the ```MarkCartAsAbandonedJob```.
+- ```MarkCartAsAbandonedJob``` finds all ```Cart``` records **ready for abandonment** and updates their ```abandoned_at``` timestamp.
+- It finds all ```Cart``` records **ready for deletion** and permanently removes them.
+- Ensures carts inactive for more than ```3 hours``` are marked as abandoned.
+- Ensures carts abandoned for more than ```7 days``` are deleted.
+
+## Versions :gem:
+* **Ruby:** 3.3.1
+* **Rails:** 7.1.3
+
+## Setup :monorail:
+1. Run `bundle install`.
+2. Set up `config/database.yml`.
+3. Set up `.env`.
+4. Run `./bin/rails db:drop db:create db:migrate db:seed`.
+5. Run `./bin/rails s`.
+
+## Docker :whale:
+
+### **Install Docker**
+- **Mac**: [Install Docker Desktop](https://docs.docker.com/desktop/install/mac-install)
+- **Linux**: Follow [this guide](https://docs.docker.com/engine/install/ubuntu/)
+- **Windows**: Use [WSL2](https://docs.docker.com/docker-for-windows/wsl/)
+
+### **Docker Commands**
+```bash
+sh devops/chmod.sh
+./devops/compose/build.sh --no-cache
+./devops/compose/up.sh
+./devops/rails/restart.sh
+./devops/rails/spec.sh
+./devops/compose/down.sh
+```
+
+## DB Reminders
+- Run the container and use `localhost` as the host for database management tools.
+- If DB role issues occur, try `pkill postgres` and `brew services stop postgresql` (Mac).
+- If DB access issues persist, rebuild the container.
+
+## That's it! Happy coding! :computer:
+```
+
