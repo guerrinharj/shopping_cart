@@ -1,6 +1,6 @@
 class CartsController < ApplicationController
-  before_action :set_cart, only: %i[show destroy add_product remove_product]
-  before_action :refresh_last_interaction, only: %i[add_product remove_product]
+  before_action :set_cart, only: %i[show destroy add_item remove_item]
+  before_action :refresh_last_interaction, only: %i[add_item remove_item]
 
   def show
     render json: format_cart_response(@cart)
@@ -31,7 +31,7 @@ class CartsController < ApplicationController
     head :no_content
   end
 
-  def add_product
+  def add_item
     product = Product.find_by(id: params[:product_id])
     return render json: { error: "Product not found" }, status: :not_found unless product
 
@@ -45,16 +45,11 @@ class CartsController < ApplicationController
     render json: format_cart_response(@cart), status: :ok
   end
 
-  def remove_product
+  def remove_item
     cart_item = @cart.cart_items.find_by(product_id: params[:product_id])
     return render json: { error: "Product not found in cart" }, status: :not_found unless cart_item
 
-    cart_item.quantity -= params[:quantity].to_i
-    if cart_item.quantity <= 0
-      cart_item.destroy
-    else
-      cart_item.save!
-    end
+    cart_item.destroy
 
     @cart.update_total_price
     @cart.save!
