@@ -1,7 +1,8 @@
 class Cart < ApplicationRecord
-  validates_numericality_of :total_price, greater_than_or_equal_to: 0
+  has_many :cart_items, dependent: :destroy
+  has_many :products, through: :cart_items
 
-  before_save :initialize_products
+  validates_numericality_of :total_price, greater_than_or_equal_to: 0
 
   before_save :update_last_interaction
 
@@ -10,11 +11,11 @@ class Cart < ApplicationRecord
   scope :ready_for_abandonment, -> { not_abandoned.where("last_interaction_at < ?", 3.hours.ago) }
   scope :ready_for_deletion, -> { abandoned.where("abandoned_at < ?", 7.days.ago) }
 
-  private
-
-  def initialize_products
-    self.products ||= []
+  def update_total_price
+    self.total_price = cart_items.sum(:total_price)
   end
+
+  private
 
   def update_last_interaction
     self.last_interaction_at ||= Time.current
