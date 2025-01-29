@@ -15,6 +15,14 @@ class Cart < ApplicationRecord
     self.total_price = cart_items.sum(:total_price)
   end
 
+  def mark_as_abandoned
+    update!(abandoned_at: Time.current) if last_interaction_at < 3.hours.ago
+  end
+
+  def remove_if_abandoned
+    destroy! if abandoned_at && abandoned_at < 7.days.ago
+  end
+
   private
 
   def update_last_interaction
