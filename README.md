@@ -73,7 +73,22 @@ Create a cart and add products to it.
 curl --location 'http://localhost:3000/cart'
 ```
 
-**Response:** *(Same as GET /cart response)*
+**Response:**
+```json
+{
+  "id": 12,
+  "products": [
+      {
+          "id": 3,
+          "name": "Xiaomi Mi 27 Pro Plus Master Ultra",
+          "quantity": 5,
+          "unit_price": 999.99,
+          "total_price": 4999.95
+      }
+  ],
+  "total_price": 4999.95
+}
+```
 
 ### ```DELETE /cart```
 
@@ -103,6 +118,29 @@ curl --location 'http://localhost:3000/cart/add_item' \
 
 **Response:**
 
+```json
+{
+    "id": 12,
+    "products": [
+        {
+            "id": 1,
+            "name": "Samsung Galaxy S24 Ultra",
+            "quantity": 3,
+            "unit_price": "12999.99",
+            "total_price": "38999.97"
+        },
+        {
+            "id": 3,
+            "name": "Xiamo Mi 27 Pro Plus Master Ultra",
+            "quantity": 5,
+            "unit_price": "999.99",
+            "total_price": "4999.95"
+        }
+    ],
+    "total_price": "43999.92"
+}
+```
+
 ### ```DELETE /cart/:product_id```
 
 Remove a product from the cart.
@@ -113,6 +151,21 @@ curl --location --request DELETE 'http://localhost:3000/cart/1'
 ```
 
 **Response:**
+```json
+{
+    "id": 12,
+    "products": [
+        {
+            "id": 3,
+            "name": "Xiamo Mi 27 Pro Plus Master Ultra",
+            "quantity": 5,
+            "unit_price": "999.99",
+            "total_price": "4999.95"
+        }
+    ],
+    "total_price": "4999.95"
+}
+```
 
 ### ```GET /products```
 
@@ -123,23 +176,129 @@ Get all products from the database.
 curl --location 'http://localhost:3000/products'
 ```
 
-**Response:** *(Array of product objects)*
+**Response:**
+```json
+[
+    {
+        "id": 1,
+        "name": "Samsung Galaxy S24 Ultra",
+        "price": "12999.99",
+        "created_at": "2025-01-28T12:01:07.906Z",
+        "updated_at": "2025-01-28T12:01:07.906Z",
+        "cart_id": null
+    },
+    {
+        "id": 2,
+        "name": "iPhone 15 Pro Max",
+        "price": "14999.99",
+        "created_at": "2025-01-28T12:01:07.908Z",
+        "updated_at": "2025-01-28T12:01:07.908Z",
+        "cart_id": null
+    },
+    {
+        "id": 3,
+        "name": "Xiamo Mi 27 Pro Plus Master Ultra",
+        "price": "999.99",
+        "created_at": "2025-01-28T12:01:07.910Z",
+        "updated_at": "2025-01-28T12:01:07.910Z",
+        "cart_id": null
+    }
+]
+```
 
 ### ```GET /products/:product_id```
 
 Get a single product from the database.
 
+
+**Request**
+```bash
+curl --location 'http://localhost:3000/products/1' \
+--data ''
+```
+
+**Response**
+
+```json 
+{
+    "id": 1,
+    "name": "Samsung Galaxy S24 Ultra",
+    "price": "12999.99",
+    "created_at": "2025-01-28T12:01:07.906Z",
+    "updated_at": "2025-01-28T12:01:07.906Z",
+    "cart_id": null
+}
+```
+
 ### ```POST /products```
 
 Create a product.
+
+**Request**
+
+```bash
+curl --location 'http://localhost:3000/products/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name": "Toshiba Handbook",
+    "price": "124.99"
+}
+'
+```
+
+
+**Response**
+```json
+{
+    "id": 129,
+    "name": "Toshiba Handbook",
+    "price": "124.99",
+    "created_at": "2025-01-29T16:35:08.427Z",
+    "updated_at": "2025-01-29T16:35:08.427Z",
+    "cart_id": null
+}
+```
+
 
 ### ```PUT /products/:product_id```
 
 Edit a product.
 
+**Request**
+```bash
+curl --location --request PUT 'http://localhost:3000/products/129' \
+--header 'Content-Type: application/json' \
+--data '{
+    "price": "824.99"
+}
+'
+```
+
+**Response**
+```json
+{
+    "price": "824.99",
+    "id": 129,
+    "name": "Toshiba Handbook",
+    "created_at": "2025-01-29T16:35:08.427Z",
+    "updated_at": "2025-01-29T16:36:44.938Z",
+    "cart_id": null
+}
+```
+
 ### ```DELETE /products/:product_id```
 
 Delete a product.
+
+**Request**
+```bash
+curl --location --request DELETE 'http://localhost:3000/products/129' \
+--data ''
+```
+
+**Response**
+```204 No Content```
+
 
 ## Abandonment System
 
@@ -167,25 +326,85 @@ Delete a product.
 
 ## Docker :whale:
 
-### **Install Docker**
-- **Mac**: [Install Docker Desktop](https://docs.docker.com/desktop/install/mac-install)
-- **Linux**: Follow [this guide](https://docs.docker.com/engine/install/ubuntu/)
-- **Windows**: Use [WSL2](https://docs.docker.com/docker-for-windows/wsl/)
+<p>This is a 100% dockerized application!</p>
 
-### **Docker Commands**
+#### Install Docker for Mac
+<ul>
+    <li>Install Docker Desktop: https://docs.docker.com/desktop/install/mac-install </li>
+</ul>
+
+#### Install Docker for Linux
+<ul>
+    <li>Uninstall docker engine: https://docs.docker.com/engine/install/ubuntu/#uninstall-docker-engine</li>
+    <li>Install docker engine: https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository</li>
+    <li>Config docker as a non-root user: https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user</li>
+    <li>Config docker to start on boot: https://docs.docker.com/engine/install/linux-postinstall/#configure-docker-to-start-on-boot</li>
+</ul>
+
+#### Install Docker for Linux
+<ul>
+    <li>Do you use Windows? I'm sorry, docker doesn't work well on Windows. </li>
+</ul>
+
+#### Docker steps reminders
+
+- Start terminal
+- Make sure of permissions of your OS and terminal system are on point. (Don't be afraid to change the shebang in case you need)
+- If you're not installing for the first time, don't overwrite archives
+- If you're installing a new gem, be always sure to rebuild.
+- This application use a series of shell scripts in order to simplify docker and rails commands, they're all written inside the devops folder.
+
+
+### Build the container and start the DB
+
+
 ```bash
-sh devops/chmod.sh
-./devops/compose/build.sh --no-cache
-./devops/compose/up.sh
-./devops/rails/restart.sh
-./devops/rails/spec.sh
-./devops/compose/down.sh
+  sh devops/chmod.sh
+  ./devops/compose/build.sh --no-cache
+  ./devops/compose/up.sh
+  ./devops/rails/restart.sh
+  ./devops/rails/spec.sh
+  ./devops/compose/down.sh
 ```
 
-## DB Reminders
-- Run the container and use `localhost` as the host for database management tools.
-- If DB role issues occur, try `pkill postgres` and `brew services stop postgresql` (Mac).
-- If DB access issues persist, rebuild the container.
+### Run Rails server
 
-## That's it! Happy coding! :computer:
+```bash
+    ./devops/compose/up.sh
+    ./devops/rails/server.sh
+    # CTRL + C
+    ./devops/compose/down.sh
+```
 
+### Run Rails console
+
+```bash
+    ./devops/compose/up.sh
+    ./devops/rails/console.sh
+    # CTRL + C
+    ./devops/compose/down.sh
+```
+
+### Update DB and Rails
+
+```bash
+    ./devops/compose/up.sh
+    ./devops/rails/update.sh
+    # CTRL + C
+    ./devops/compose/down.sh
+```
+
+### Uninstall
+
+```bash
+  ./devops/compose/down.sh
+  ./devops/compose/delete.sh
+```
+
+## DB reminders
+
+- If you're having trouble when opening on a DB management system (like Beekeeper, DBeaver, PG Admin, etc.), don't forget that you need to run the container and use localhost as your host. 
+- If any role issues appear Don't be afraid to pkill postgres and brew services stop postgresql (If you're running in homebrew).
+- If you are having trouble with users accessing the DB, rebuild the container.
+
+<h2>That's it. Happy coding :computer:</h2> 
