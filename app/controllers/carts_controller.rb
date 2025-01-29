@@ -1,37 +1,29 @@
 class CartsController < ApplicationController
-  before_action :set_cart, only: %i[show destroy add_product remove_product]
-  before_action :refresh_last_interaction, only: %i[add_product remove_product]
+  before_action :set_cart, only: %i[show destroy add_item remove_item]
+  before_action :refresh_last_interaction, only: %i[add_item remove_item]
 
   def show
-    render json: @cart
+    render json: format_cart_response(@cart)
   end
 
   def create
-    product_id = params[:product_id]
+    product = Product.find_by(id: params[:product_id])
+    return render json: { error: "Product not found" }, status: :not_found unless product
+
     quantity = params[:quantity].to_i
+    return render json: { error: "Quantity must be greater than 0" }, status: :unprocessable_entity if quantity <= 0
 
-    product = Product.find_by(id: product_id)
-    if product.nil?
-      render json: { error: "Product not found" }, status: :not_found and return
-    end
+    @cart = Cart.create(total_price: 0)
 
-    @cart = Cart.new
-    @cart.products = [
-      {
-        id: product.id,
-        name: product.name,
-        quantity: quantity,
-        unit_price: product.price,
-        total_price: product.price * quantity
-      }
-    ]
-    @cart.total_price = product.price * quantity
+    @cart.cart_items.create!(
+      product: product,
+      quantity: quantity
+    )
 
-    if @cart.save
-      render json: @cart, status: :created
-    else
-      render json: @cart.errors, status: :unprocessable_entity
-    end
+    @cart.update_total_price
+    @cart.save!
+
+    render json: format_cart_response(@cart), status: :created
   end
 
   def destroy
@@ -39,78 +31,55 @@ class CartsController < ApplicationController
     head :no_content
   end
 
-  def add_product
-    product_id = params[:product_id]
-    quantity = params[:quantity].to_i
+  def add_item
+    product = Product.find_by(id: params[:product_id])
+    return render json: { error: "Product not found" }, status: :not_found unless product
 
-    product = Product.find_by(id: product_id)
-    if product.nil?
-      render json: { error: "Product not found" }, status: :not_found and return
-    end
+    cart_item = @cart.cart_items.find_or_initialize_by(product: product)
+    cart_item.quantity += params[:quantity].to_i
+    cart_item.save!
 
-    existing_product = @cart.products.find { |p| p['id'] == product_id }
+    @cart.update_total_price
+    @cart.save!
 
-    if existing_product
-      existing_product['quantity'] = existing_product['quantity'].to_i + quantity
-      existing_product['total_price'] = existing_product['quantity'] * product.price
-    else
-      @cart.products << {
-        id: product.id,
-        name: product.name,
-        quantity: quantity,
-        unit_price: product.price,
-        total_price: product.price * quantity
-      }
-    end
-
-    update_cart_total_price
-
-    if @cart.save
-      render json: @cart, status: :ok
-    else
-      render json: @cart.errors, status: :unprocessable_entity
-    end
+    render json: format_cart_response(@cart), status: :ok
   end
 
-  def remove_product
-    product_id = params[:product_id]
-    quantity = params[:quantity].to_i
-  
-    product = @cart.products.find { |p| p['id'] == product_id }
-  
-    if product
-      product['quantity'] = product['quantity'].to_i - quantity
-  
-      if product['quantity'] > 0
-        product['total_price'] = product['quantity'].to_i * product['unit_price'].to_f
-      else
-        @cart.products.delete(product)
-      end
-  
-      update_cart_total_price
-  
-      if @cart.save
-        render json: @cart, status: :ok
-      else
-        render json: @cart.errors, status: :unprocessable_entity
-      end
-    else
-      render json: { error: "Product not found in cart" }, status: :not_found
-    end
-  end
+  def remove_item
+    cart_item = @cart.cart_items.find_by(product_id: params[:product_id])
+    return render json: { error: "Product not found in cart" }, status: :not_found unless cart_item
 
+    cart_item.destroy
+
+    @cart.update_total_price
+    @cart.save!
+
+    render json: format_cart_response(@cart), status: :ok
+  end
 
   private
 
   def set_cart
-    @cart = Cart.last
-  end
-
-  def update_cart_total_price
-    @cart.total_price = @cart.products.sum { |p| p['total_price'].to_f }
+    @cart = Cart.last || Cart.create(total_price: 0)
   end
 
   def refresh_last_interaction
     @cart.update!(last_interaction_at: Time.current)
+  end
+
+  def format_cart_response(cart)
+    {
+      id: cart.id,
+      products: cart.cart_items.map do |cart_item|
+        {
+          id: cart_item.product.id,
+          name: cart_item.product.name,
+          quantity: cart_item.quantity,
+          unit_price: cart_item.product.price,
+          total_price: cart_item.total_price
+        }
+      end,
+      total_price: cart.total_price
+    }
   end
 end

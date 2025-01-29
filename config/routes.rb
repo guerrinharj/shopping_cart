@@ -4,8 +4,8 @@ Rails.application.routes.draw do
   mount Sidekiq::Web => '/sidekiq'
 
   resource :cart, only: %i[show create update destroy] do
-    post :add_product  
-    delete :remove_product 
+    post :add_item  
+    delete '/:product_id', to: 'carts#remove_item'
   end
 
   resources :products
